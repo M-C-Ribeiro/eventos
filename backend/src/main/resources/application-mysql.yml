@@ -1,0 +1,15 @@
+# Perfil MySQL 8+: SPRING_PROFILES_ACTIVE=mysql
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/eventhub?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8}
+    username: ${DB_USER:eventhub}
+    password: ${DB_PASSWORD:eventhub}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}

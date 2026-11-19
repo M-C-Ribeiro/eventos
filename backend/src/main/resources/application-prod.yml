@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/eventhub}
+    username: ${DB_USER:eventhub}
+    password: ${DB_PASSWORD:eventhub}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}

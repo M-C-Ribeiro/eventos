@@ -1,0 +1,37 @@
+# Sobe PostgreSQL + API (perfil prod) + interface:  docker compose up --build
+# Depois abra http://localhost:5173
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: eventhub
+      POSTGRES_USER: eventhub
+      POSTGRES_PASSWORD: eventhub
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventhub"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/eventhub
+      DB_USER: eventhub
+      DB_PASSWORD: eventhub
+      APP_JWT_SECRET: troque-este-segredo-por-um-valor-longo-e-aleatorio
+      APP_CORS_ORIGINS: http://localhost:5173
+    ports: ["8080:8080"]
+
+  web:
+    build: ./frontend
+    depends_on: [api]
+    # Interface em http://localhost:5173 (o nginx repassa /api para o serviço api).
+    ports: ["5173:80"]
+
+volumes:
+  pgdata:

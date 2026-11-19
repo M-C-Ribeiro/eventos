@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: eventhub-api
+  # Perfil padrão: banco H2 em memória, sem instalar nada. Use o perfil "prod" para PostgreSQL.
+  datasource:
+    url: jdbc:h2:mem:eventhub;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+  jpa:
+    # O tenant da sessão do Hibernate é definido quando ela abre; manter a sessão aberta
+    # durante toda a requisição (open-in-view) misturaria contextos.
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    # {vendor} vira h2, postgresql ou mysql conforme o banco conectado.
+    locations: classpath:db/migration/{vendor}
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  error:
+    include-message: never
+
+app:
+  jwt:
+    # Troque em produção! Defina a variável de ambiente APP_JWT_SECRET (mín. 32 caracteres).
+    secret: ${APP_JWT_SECRET:dev-secret-trocar-em-producao-0123456789abcdef}
+    expiration: 12h
+  cors:
+    allowed-origins: ${APP_CORS_ORIGINS:http://localhost:5173}
+
+logging:
+  level:
+    com.eventhub: INFO

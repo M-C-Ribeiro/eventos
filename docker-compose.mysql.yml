@@ -1,0 +1,41 @@
+# Sobe MySQL + API (perfil mysql) + interface:  docker compose -f docker-compose.mysql.yml up --build
+# Depois abra http://localhost:5173
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: eventhub
+      MYSQL_USER: eventhub
+      MYSQL_PASSWORD: eventhub
+      MYSQL_ROOT_PASSWORD: root
+    # 3307 no seu computador, para não conflitar com um MySQL já instalado (que usa a 3306).
+    # A API usa a rede interna do Docker (db:3306), então esta porta só serve para acessar o banco
+    # por fora, ex.: MySQL Workbench em localhost:3307, usuário eventhub, senha eventhub.
+    ports: ["3307:3306"]
+    volumes: [mysqldata:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -ueventhub -peventhub --silent"]
+      interval: 5s
+      retries: 20
+
+  api:
+    build: ./backend
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: jdbc:mysql://db:3306/eventhub?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8
+      DB_USER: eventhub
+      DB_PASSWORD: eventhub
+      APP_JWT_SECRET: troque-este-segredo-por-um-valor-longo-e-aleatorio
+      APP_CORS_ORIGINS: http://localhost:5173
+    ports: ["8080:8080"]
+
+  web:
+    build: ./frontend
+    depends_on: [api]
+    # Interface em http://localhost:5173 (o nginx repassa /api para o serviço api).
+    ports: ["5173:80"]
+
+volumes:
+  mysqldata:

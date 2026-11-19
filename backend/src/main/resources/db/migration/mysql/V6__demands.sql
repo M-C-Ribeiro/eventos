@@ -1,0 +1,35 @@
+-- Demandas do evento e suas atribuições (a uma função da equipe ou a uma pessoa específica).
+
+CREATE TABLE demands (
+    id           BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tenant_id    BIGINT        NOT NULL,
+    event_id     BIGINT        NOT NULL,
+    title        VARCHAR(160)  NOT NULL,
+    description  VARCHAR(2000),
+    due_date     DATE          NOT NULL,
+    created_at   DATETIME(6) NOT NULL,
+    CONSTRAINT fk_demands_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
+    CONSTRAINT fk_demands_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+CREATE INDEX idx_demands_event_due ON demands (event_id, due_date);
+
+CREATE TABLE demand_assignments (
+    id           BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tenant_id    BIGINT NOT NULL,
+    demand_id    BIGINT NOT NULL,
+    function_id  BIGINT,
+    user_id      BIGINT,
+    CONSTRAINT ck_assignment_target CHECK ((function_id IS NULL AND user_id IS NOT NULL)
+                                        OR (function_id IS NOT NULL AND user_id IS NULL)),
+    CONSTRAINT uk_assignment_function UNIQUE (demand_id, function_id),
+    CONSTRAINT uk_assignment_user UNIQUE (demand_id, user_id),
+    CONSTRAINT fk_assignment_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
+    CONSTRAINT fk_assignment_demand FOREIGN KEY (demand_id) REFERENCES demands (id) ON DELETE CASCADE,
+    CONSTRAINT fk_assignment_function FOREIGN KEY (function_id) REFERENCES team_functions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_assignment_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+-- Os usuários não se inscrevem mais nos eventos: atualiza o texto padrão do perfil Membro.
+UPDATE access_roles SET description = 'Vê os eventos publicados.'
+WHERE name = 'Membro' AND description = 'Vê eventos publicados e se inscreve.';
